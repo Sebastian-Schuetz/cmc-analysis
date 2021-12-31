@@ -12,6 +12,7 @@ from analyse_data import calc_cmc, calc_cmc_epoched
 from data_plot import plot
 import matplotlib as mpl
 from joblib import Parallel, delayed
+import numpy as np
 
 def create_artificial_signal(frequency, duration, sampling_rate, freqs, durs):
     sig1 = gen_artifical_signal([frequency], [duration], sampling_rate)
@@ -82,5 +83,65 @@ def test4():
     sig2 = gen_random_signal(10, 1000)
     test_and_save(sig1, sig2, 1000, 0.05, -1, -1, 0, "04", 20, 0.06)
     
+def test5():
+    """
+    Calculates the epoched Coherence for contraction with one frequency
+
+    Returns
+    -------
+    None.
+
+    """
+    epochs = 2
+    
+    frequency = 24
+    duration = 10
+    freqs = [24, 5]
+    durs = [5,5]
+    sampling_rate = 1000
+    
+    
+    epochs1 = [gen_artifical_signal([frequency], [duration], sampling_rate) for i in range(epochs)]
+    epochs2 = [gen_artifical_signal(freqs, durs, sampling_rate) for i in range(epochs)]
+    wct_ =  []
+    
+    for e1, e2 in zip(epochs1, epochs2):
+        wct, awct, freq = calc_cmc(e1, e2, sampling_rate, dj=0.05, s0=-1, J=-1, f0=20, deltaj0=0.06)
+        figs =  plot(e1, e2, wct, awct, freq, "wavelets epoched")
+        wct_.append(wct)
+    
+    # sig1 = gen_artifical_signal([frequency], [duration], sampling_rate)
+    # sig2 = gen_artifical_signal(freqs, durs, sampling_rate) 
+    # wct, awct, freq = calc_cmc(sig1, sig2, sampling_rate, dj=0.05, s0=-1, J=-1, f0=20, deltaj0=0.06)
+    # figs =  plot(sig1, sig2, wct, awct, freq, "wavelets epoched")
+    
+    
+    wct, awct, freq = calc_cmc_epoched(epochs1, epochs2, sampling_rate, dj=0.05, s0=-1, J=-1, f0=20, deltaj0=0.06)
+    figs =  plot(epochs1[0], epochs2[0], wct, awct, freq, "wavelets epoched")
+    
+    i=0
+    if figs is not None:
+       for f in figs:
+           f.savefig("./plots/wavelets05"+ "/" + "wave_" + f'{i:03d}'+".png", dpi=1200)
+           i += 1
+       print(i)
+    
 if __name__ == "__main__":
-    test4()
+    epochs = 10
+    
+    frequency = 24
+    duration = 10
+    freqs = [24, 5]
+    durs = [5,5]
+    sampling_rate = 1000
+    
+    
+    epochs1 = [gen_artifical_signal([frequency], [duration], sampling_rate) for i in range(epochs)]
+    epochs2 = [gen_artifical_signal(freqs, durs, sampling_rate) for i in range(epochs)]
+    wct_ =  []
+    
+    for e1, e2 in zip(epochs1, epochs2):
+        wct, awct, freq = calc_cmc(e1, e2, sampling_rate, dj=0.05, s0=-1, J=-1, f0=20, deltaj0=0.06)
+        figs =  plot(e1, e2, wct, awct, freq, "wavelets epoched")
+        wct_.append(wct)
+    plot(e1, e2, np.mean(wct_, axis=0), awct, freq, "wavelets epoched")
